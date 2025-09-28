@@ -24,9 +24,9 @@ Sledeći primer prikazuje strukturu jednog dokumenta. Mnogi podaci koji su u V1 
     "final": "14.18"     // BSON Decimal128
   },
 
-  // --- Primenjeni Dizajn Šabloni ---
+  // --- Primenjeni dizajn šabloni ---
 
-  // 1. Šablon Proračunavanja (Computed Pattern)
+  // 1. Šablon proračunavanja (Computed Pattern)
   "createdAtDetails": {
     "year": 2023,       // Integer
     "month": 7,         // Integer
@@ -34,7 +34,7 @@ Sledeći primer prikazuje strukturu jednog dokumenta. Mnogi podaci koji su u V1 
     "hour": 14          // Integer
   },
 
-  // 2. Šablon Proširene Reference (Extended Reference Pattern)
+  // 2. Šablon proširene reference (Extended Reference Pattern)
   "store": {
     "id": 1,
     "name": "Coffee Corner Downtown",
@@ -55,7 +55,7 @@ Sledeći primer prikazuje strukturu jednog dokumenta. Mnogi podaci koji su u V1 
     "discount_type": "percentage"
   },
 
-  // 3. Šablon Ugrađivanja (Embedding Pattern)
+  // 3. Šablon ugrađivanja (Embedding Pattern)
   "items": [ // Niz ugnježdenih dokumenata
     {
       "menu_item_id": 101,
@@ -87,3 +87,54 @@ Ova šema aktivno koristi nekoliko preporučenih MongoDB dizajn šablona za post
 2.  **Proširena referenca (Extended Reference):** Umesto da čuvamo samo `store_id` ili `user_id`, mi čuvamo i najčešće potrebne podatke uz ID (npr. `store.name`, `user.gender`). Ovo eliminiše potrebu za `$lookup` operacijama u većini upita.
 
 3.  **Proračunavanje (Computed Pattern):** Polja koja se često koriste za filtriranje ili grupisanje, a koja se mogu izračunati prilikom upisa, čuvaju se direktno u dokumentu. Primeri su `createdAtDetails` (za analizu po danu, satu...), `user.age_group` i `item_count`. Ovo drastično ubrzava agregacije.
+
+
+## Strateški indeksi za V2 šemu
+
+Da bi se u potpunosti iskoristile prednosti denormalizovane šeme, kreiran je set strateških indeksa. Svaki indeks je pažljivo odabran da drastično ubrza specifične vrste analitičkih upita, pretvarajući spore `COLLSCAN` (skeniranje cele kolekcije) operacije u munjevito brze `IXSCAN` (skeniranje indeksa) operacije.
+
+---
+
+### 1. Složeni indeks (`Compound Index`)
+
+*   **Naziv indeksa:** `idx_date_finalAmount`
+*   **Definicija:** `db.transactions.createIndex({ "created_at": 1, "amounts.final": -1 })`
+*   **Zašto ova vrsta?** Složeni indeks optimizuje upite koji filtriraju po prvom polju (`created_at`) i sortiraju po drugom (`amounts.final`). Redosled polja u indeksu je ključan i prati redosled operacija u upitu.
+*   **Šta omogućava?** Ovo je **ključni indeks** za upite tipa "Top N", kao što je "pronađi 5 najvrednijih transakcija u julu". Omogućava bazi da:
+    1.  Trenutno pronađe početak opsega za jul koristeći `created_at`.
+    2.  Čita podatke koji su **već sortirani** po `amounts.final`, eliminišući potrebu za skupim sortiranjem u memoriji.
+
+---
+
+### 2. Jednostavni indeksi (`Single-Field Indexes`)
+
+*   **Nazivi indeksa:** `idx_store_id`, `idx_dayOfWeek`
+*   **Definicije:**
+    *   `db.transactions.createIndex({ "store.id": 1 })`
+    *   `db.transactions.createIndex({ "createdAtDetails.dayOfWeek": 1 })`
+*   **Zašto ova vrsta?** Ovo su osnovni indeksi koji ubrzavaju bilo kakvo filtriranje ili grupisanje po jednom polju.
+*   **Šta omogućavaju?** Brze odgovore na pitanja poput:
+    *   "Koliki je ukupan prihod za prodavnicu X?" (`idx_store_id`)
+    *   "Uporedi promet ponedeljkom i petkom." (`idx_dayOfWeek`)
+
+---
+
+### 3. Proređeni indeksi (`Sparse Indexes`)
+
+*   **Nazivi indeksa:** `idx_user_id_sparse`, `idx_voucher_id_sparse`
+*   **Definicije:**
+    *   `db.transactions.createIndex({ "user.id": 1 }, { sparse: true })`
+    *   `db.transactions.createIndex({ "voucher.id": 1 }, { sparse: true })`
+*   **Zašto ova vrsta?** Proređeni indeks uključuje unose **samo za dokumente koji sadrže indeksirano polje**. Pošto mnoge transakcije nemaju korisnika ili vaučer (`user` ili `voucher` polje je `null`), ovaj tip indeksa je **manji i efikasniji**.
+*   **Šta omogućava?** Efikasnu analizu koja se odnosi isključivo na registrovane korisnike ili korišćene vaučere (npr. "pronađi sve transakcije korisnika Y"), ignorišući sve anonimne transakcije.
+
+---
+
+### 4. Višeključni indeks (`Multikey Index`)
+
+*   **Naziv indeksa:** `idx_items_category_multikey`
+*   **Definicija:** `db.transactions.createIndex({ "items.category": 1 })`
+*   **Zašto ova vrsta?** Kada se indeksira polje unutar **niza** (`items`), MongoDB automatski kreira višeključni indeks. On ne indeksira sam niz, već **svaki pojedinačni element** unutar niza.
+*   **Šta omogućava?** Munjevito brzo pretraživanje transakcija na osnovu sadržaja niza. Omogućava efikasne odgovore na pitanja kao što su:
+    *   "Pronađi sve transakcije u kojima je kupljen bar jedan proizvod iz kategorije 'Coffee'."
+    *   "Koliki je ukupan prihod od proizvoda iz kategorije 'Pastry'?"

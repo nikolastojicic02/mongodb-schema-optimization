@@ -1,5 +1,4 @@
 # data_importer_v2.py
-# (Možete dodati ovu klasu u postojeći data_importer_v1.py ili kreirati novi fajl)
 
 import csv
 from datetime import datetime
@@ -9,7 +8,6 @@ import pandas as pd
 from bson.decimal128 import Decimal128
 
 
-# --- Funkcija to_decimal128 ostaje ista ---
 def to_decimal128(value):
     """Safely converts a string or number to a BSON Decimal128."""
     try:
@@ -91,7 +89,7 @@ class OptimizedDataImporter:
         store_id = int(row['store_id'])
         payment_method_id = int(row['payment_method_id'])
 
-        # --- Šablon Proširene Reference (Extended Reference) ---
+        # --- Šablon proširene reference (Extended Reference) ---
         store_info = self.stores.get(store_id, {})
         payment_info = self.payment_methods.get(payment_method_id, {})
 
@@ -143,14 +141,14 @@ class OptimizedDataImporter:
                 "discount": to_decimal128(row['discount_applied']),
                 "final": to_decimal128(row['final_amount'])
             },
-            # Šablon Proračunavanja (Computed Pattern)
+            # Šablon proračunavanja (Computed Pattern)
             "createdAtDetails": {
                 "year": created_at_dt.year,
                 "month": created_at_dt.month,
                 "dayOfWeek": created_at_dt.isoweekday(),  # 1=Ponedeljak, 7=Nedelja
                 "hour": created_at_dt.hour
             },
-            # Šablon Proširene Reference
+            # Šablon proširene reference
             "store": {
                 "id": store_id,
                 "name": store_info.get('store_name'),

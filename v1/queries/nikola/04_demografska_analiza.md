@@ -37,7 +37,7 @@ db.getCollection('transactions').aggregate([
   },
   {
     $addFields: {
-      age: { $subtract: [2024, "$birthYear"] }
+      age: { $subtract: [2025, "$birthYear"] }
     }
   },
   {

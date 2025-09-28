@@ -40,7 +40,6 @@ if __name__ == '__main__':
 
         transactions_collection = db["transactions"]
 
-        # Indeks za Upit N2 (filtriranje po datumu i sortiranje po vrednosti)
         transactions_collection.create_index(
             [("created_at", pymongo.ASCENDING), ("amounts.final", pymongo.DESCENDING)],
             name="idx_date_finalAmount"
@@ -48,25 +47,20 @@ if __name__ == '__main__':
         print("  -> Created compound index for date range and sorting by final amount.")
 
 
-        # Indeks za Upit T2 (brzo grupisanje po prodavnicama)
         transactions_collection.create_index([("store.id", pymongo.ASCENDING)], name="idx_store_id")
         print("  -> Created index for grouping by store.")
 
-        # Sparse Indeks za upite nad registrovanim korisnicima (N2, N3, N5)
         transactions_collection.create_index([("user.id", pymongo.ASCENDING)], sparse=True, name="idx_user_id_sparse")
         print("  -> Created sparse index for registered user analysis.")
 
-        # Sparse Indeks za upite nad transakcijama sa vaučerima (N1)
         transactions_collection.create_index([("voucher.id", pymongo.ASCENDING)], sparse=True,
                                              name="idx_voucher_id_sparse")
         print("  -> Created sparse index for voucher analysis.")
 
-        # Multikey Indeks za Upit 5 (analiza po kategorijama proizvoda)
         transactions_collection.create_index([("items.category", pymongo.ASCENDING)],
                                              name="idx_items_category_multikey")
         print("  -> Created multikey index for product category analysis.")
 
-        # Indeks za Upit T4 i N4 (analiza po danima u nedelji)
         transactions_collection.create_index([("createdAtDetails.dayOfWeek", pymongo.ASCENDING)], name="idx_dayOfWeek")
         print("  -> Created index for day-of-week analysis.")
 

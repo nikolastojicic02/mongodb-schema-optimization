@@ -31,7 +31,6 @@ class DataImporter:
                     documents.append(transform_func(row))
 
             if documents:
-                # Safety check: Before importing the first batch (July 2023), clear any old data.
                 if collection_name in ["users", "transactions", "transaction_items"]:
                     if db[collection_name].count_documents({}) > 0 and "202307" in file_name:
                         print(f"    -> Clearing existing data from collection '{collection_name}'...")
@@ -43,8 +42,6 @@ class DataImporter:
             print(f"  !!! ERROR: File not found: {full_file_path}")
         except Exception as e:
             print(f"  !!! ERROR while processing file {file_name}: {e}")
-
-    # --- Transformation methods (No changes needed here) ---
 
     def _transform_store(self, row):
         return {"_id": int(row['store_id']), "name": row['store_name'],

@@ -28,10 +28,10 @@ if __name__ == '__main__':
         # 1. Import static collections
         importer.import_static_collections(db)
 
-        # 2. Import data for JULY 2023 - Using your file name format
+        # 2. Import data for JULY 2023
         importer.import_dynamic_collections(db, period_suffix="202307")
 
-        # 3. Import data for JANUARY 2024 - Using your file name format
+        # 3. Import data for JANUARY 2024
         importer.import_dynamic_collections(db, period_suffix="202401")
 
         print("\n--- ALL DATA HAS BEEN SUCCESSFULLY IMPORTED ACCORDING TO THE INITIAL SCHEMA! ---")
