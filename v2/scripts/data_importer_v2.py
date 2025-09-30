@@ -179,11 +179,6 @@ class OptimizedDataImporter:
                 for row in reader:
                     documents.append(self._transform_transaction_v2(row))
 
-            if documents:
-                if db[collection_name].count_documents({}) > 0 and "202307" in file_name:
-                    print(f"    -> Clearing existing data from collection '{collection_name}'...")
-                    db[collection_name].delete_many({})
-                db[collection_name].insert_many(documents, ordered=False)
             print(f"  -> Imported {len(documents)} documents into '{collection_name}'.")
         except FileNotFoundError:
             print(f"  !!! ERROR: File not found: {full_file_path}")

@@ -8,7 +8,7 @@
 
 ```javascript
 db.transactions.aggregate([
-  // FAZA 1: Filtriraj transakcije koje imaju vaučer I definisanu starosnu grupu
+  // FAZA 1: Filtriraj transakcije koje imaju vaučer i definisanu starosnu grupu
   {
     $match: {
       voucher: { $ne: null },
@@ -45,7 +45,7 @@ db.transactions.aggregate([
 | Pregledanih Dokumenata    | 1,240,620                   | 1,240,620                        | Isto                           |
 
 **Tumačenje:**  
-Iako strategija ostaje COLLSCAN (jer nema složenog indeksa koji pokriva oba uslova), ključno poboljšanje dolazi iz eliminacije `$lookup`-a i izračunavanja "u letu". Ukupan rad koji baza mora da obavi je drastično manji.
+Iako strategija ostaje COLLSCAN, ključno poboljšanje dolazi iz eliminacije `$lookup`-a i izračunavanja "u letu". Ukupan rad koji baza mora da obavi je drastično manji.
 
 ## 3. REZULTAT UPITA
 

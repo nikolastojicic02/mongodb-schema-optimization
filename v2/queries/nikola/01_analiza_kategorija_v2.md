@@ -8,7 +8,7 @@
 
 ```javascript
 db.transactions.aggregate([
-  // FAZA 1: "Rasturi" (unwind) niz ugrađenih stavki 'items'.
+  // FAZA 1: Unwind niz ugrađenih stavki 'items'.
   {
     $unwind: "$items"
   },

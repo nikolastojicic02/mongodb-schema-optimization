@@ -25,7 +25,7 @@ db.getCollection('transactions').aggregate([
   // FAZA 3: Izračunaj starost korisnika
   {
     $addFields: {
-      age: { $subtract: [2024, { $year: "$userDetails.birthdate" }] }
+      age: { $subtract: [2025, { $year: "$userDetails.birthdate" }] }
     }
   },
 

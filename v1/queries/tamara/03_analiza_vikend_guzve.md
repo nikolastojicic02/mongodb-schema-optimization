@@ -1,4 +1,4 @@
-# UPIT 3: Analiza "Vikend Gužve" po satima (V1 Šema)
+# UPIT 3: Analiza "vikend gužve" po satima (V1 Šema)
 
 ---
 
