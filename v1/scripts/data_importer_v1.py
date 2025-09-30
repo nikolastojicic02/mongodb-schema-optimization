@@ -30,12 +30,6 @@ class DataImporter:
                 for row in reader:
                     documents.append(transform_func(row))
 
-            if documents:
-                if collection_name in ["users", "transactions", "transaction_items"]:
-                    if db[collection_name].count_documents({}) > 0 and "202307" in file_name:
-                        print(f"    -> Clearing existing data from collection '{collection_name}'...")
-                        db[collection_name].delete_many({})
-
                 db[collection_name].insert_many(documents, ordered=False)
             print(f"  -> Imported {len(documents)} documents.")
         except FileNotFoundError:

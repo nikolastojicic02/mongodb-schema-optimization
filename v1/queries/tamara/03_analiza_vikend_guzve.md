@@ -19,7 +19,7 @@ db.getCollection('transactions').aggregate([
   // FAZA 2: Filtriraj i zadrži samo one koji su se desili subotom ili nedeljom.
   {
     $match: {
-      dayOfWeek: { $in: }
+        dayOfWeek: { $in: [1, 7] }
     }
   },
   // FAZA 3: Grupiši po satu i sumiraj prihod.
@@ -31,7 +31,7 @@ db.getCollection('transactions').aggregate([
   },
   // FAZA 4: Sortiraj po satu.
   {
-    $sort: { _id: 1 }
+   dayOfWeek: { $in: [1, 7] }
   },
   // FAZA 5: Formatiraj izlaz.
   {
